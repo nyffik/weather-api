@@ -1,7 +1,10 @@
 plugins {
 	id 'java'
+	id 'groovy'
 	id 'org.springframework.boot' version '4.0.1'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.springframework.cloud.contract' version '5.0.0'
+	id 'com.diffplug.spotless' version '8.1.0'
 }
 
 group = 'com.mokaz'
@@ -24,20 +27,49 @@ repositories {
 	mavenCentral()
 }
 
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:2025.1.0"
+	}
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
+	//implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
+	implementation 'com.github.ben-manes.caffeine:caffeine'
+	//implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
 	implementation 'org.springframework.boot:spring-boot-starter-restclient'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-opentelemetry-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.spockframework:spock-core:2.4-groovy-5.0'
+	testImplementation 'org.spockframework:spock-spring:2.4-groovy-5.0'
+	testImplementation 'org.apache.groovy:groovy:5.0.3'
 	testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+contracts {
+	testFramework = "SPOCK"
+	baseClassForTests = "com.mokaz.weather.ContractVerifierBase"
+	contractsDslDir = file("src/test/resources/contracts")
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.named('bootBuildImage') {
+	imageName = "mokaz/${rootProject.name}:latest"
+}
+
+spotless {
+	java {
+		palantirJavaFormat()
+	}
 }
